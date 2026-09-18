@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PDFForge — The all-in-one PDF workspace</title>
+<meta name="description" content="Merge, split, compress, sign, redact and convert PDFs. Everything runs in your browser — your files never leave your device.">
+<link rel="stylesheet" href="css/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23ff6b35'/><path d='M30 22h25l15 15v41H30z' fill='none' stroke='white' stroke-width='7' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+<div id="nav"></div>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="hero-bg"><div class="grid-bg"></div><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+  <div class="wrap hero-in">
+    <span class="chip chip-brand"><span class="dot pulse"></span>20 tools · zero uploads · no sign-up needed</span>
+    <h1 class="h-xl mt16">Every PDF tool you need.<br><span class="grad-txt">None of the uploads.</span></h1>
+    <p class="lead">PDFForge runs entirely inside your browser. Merge, split, compress, sign, redact and convert documents at full speed — your files never touch a server, because there isn't one.</p>
+    <div class="hero-cta">
+      <a href="app.html" class="btn btn-p btn-lg" id="ctaMain">Open the workspace</a>
+      <a href="#tools" class="btn btn-o btn-lg">Browse all 20 tools</a>
+    </div>
+    <div class="hero-note">
+      <span id="n1"></span><span id="n2"></span><span id="n3"></span>
+    </div>
+
+    <div class="drop-hero" id="heroDrop">
+      <div class="drop-ic" id="heroIc"></div>
+      <h3 class="h-sm">Drop a PDF to start right now</h3>
+      <p class="muted" style="font-size:14px;margin-top:6px">We'll open it in the workspace — nothing is uploaded anywhere.</p>
+    </div>
+
+    <div class="logos">
+      <p>Trusted by teams at</p>
+      <div class="logos-row"><div>Northwind</div><div>Vertex Legal</div><div>Kite Financial</div><div>Aurora Health</div><div>Bramble &amp; Co</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ TOOLS ============ -->
+<section class="sec" id="tools">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="chip">The toolkit</span>
+      <h2 class="h-lg">One tab. Twenty tools.</h2>
+      <p class="lead">Stop juggling five sketchy websites that each do one thing and email you the result.</p>
+    </div>
+    <div id="catTabs" class="row gap8 center" style="flex-wrap:wrap;margin-bottom:26px"></div>
+    <div class="tool-grid" id="toolGrid"></div>
+  </div>
+</section>
+
+<!-- ============ SECURITY ============ -->
+<section class="sec" id="security" style="background:var(--bg-1);border-block:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="chip chip-ok"><span class="dot"></span>Privacy by architecture</span>
+      <h2 class="h-lg">Your documents never leave this device</h2>
+      <p class="lead">Most PDF sites upload your contracts, medical records and tax returns to a server you've never heard of. PDFForge doesn't have that server.</p>
+    </div>
+    <div class="feat-grid" id="secGrid"></div>
+    <div class="card mt32" style="background:var(--bg-2)">
+      <div class="row gap24" style="flex-wrap:wrap">
+        <div class="grow" style="min-width:260px">
+          <h3 class="h-sm" style="margin-bottom:8px">Verify it yourself</h3>
+          <p class="muted" style="font-size:14.5px">Open your browser's network tab, process a 50 MB file, and watch exactly zero bytes go out. Then turn off your Wi-Fi and do it again — everything still works.</p>
+        </div>
+        <div class="mono" style="background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px;font-size:12.5px;line-height:1.9;min-width:280px;flex:1">
+          <div><span class="dim">$</span> pdfforge.io <span style="color:var(--txt-3)">— network log</span></div>
+          <div style="color:var(--ok)">✓ GET  /app.html          2.1 KB</div>
+          <div style="color:var(--ok)">✓ GET  /vendor/pdf-lib.js  512 KB</div>
+          <div style="color:var(--txt-3)">· merge(contract.pdf, nda.pdf)</div>
+          <div style="color:var(--brand-2)">↑ 0 bytes uploaded</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW ============ -->
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head"><span class="chip">How it works</span><h2 class="h-lg">Three steps, no account</h2></div>
+    <div class="steps" id="steps"></div>
+  </div>
+</section>
+
+<!-- ============ STATS ============ -->
+<section class="sec" style="padding-top:0">
+  <div class="wrap"><div class="card" style="background:var(--bg-1)">
+    <div class="stats" id="stats"></div>
+  </div></div>
+</section>
+
+<!-- ============ TESTIMONIALS ============ -->
+<section class="sec" style="background:var(--bg-1);border-block:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head"><span class="chip">Loved by careful people</span><h2 class="h-lg">What users say</h2></div>
+    <div class="quotes" id="quotes"></div>
+  </div>
+</section>
+
+<!-- ============ PRICING TEASER ============ -->
+<section class="sec" id="pricing">
+  <div class="wrap">
+    <div class="sec-head"><span class="chip">Pricing</span><h2 class="h-lg">Free forever. Pro when you need it.</h2>
+      <p class="lead">15 operations a month free, no card. Unlimited for less than a sandwich.</p></div>
+    <div id="planTeaser"></div>
+    <div class="tc mt32"><a href="pricing.html" class="btn btn-o">Compare all plans and features</a></div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="sec" id="faq" style="background:var(--bg-1);border-block:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head"><span class="chip">Questions</span><h2 class="h-lg">Good to know</h2></div>
+    <div class="faq" id="faq"></div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="sec">
+  <div class="wrap"><div class="cta-band">
+    <h2 class="h-lg">Stop uploading your documents to strangers.</h2>
+    <p class="lead" style="margin:14px auto 0;max-width:52ch">Open the workspace and process your first file in about four seconds.</p>
+    <div class="hero-cta"><a href="app.html" class="btn btn-p btn-lg">Open PDFForge free</a></div>
+    <p class="dim" style="font-size:12.5px;margin-top:14px">No credit card · No email required · Works offline</p>
+  </div></div>
+</section>
+
+<div id="foot"></div>
+
+<script src="js/icons.js"></script>
+<script src="js/core.js"></script>
+<script src="js/tools.js"></script>
+<script>
+$('#nav').innerHTML = navBar('');
+$('#foot').innerHTML = footer();
+$('#heroIc').innerHTML = IC.upload;
+$('#n1').innerHTML = iconSpanL(IC.check) + ' No account required';
+$('#n2').innerHTML = iconSpanL(IC.check) + ' Files never uploaded';
+$('#n3').innerHTML = iconSpanL(IC.check) + ' Works fully offline';
+function iconSpanL(s){return `<span style="display:grid;width:14px;height:14px;color:var(--ok)">${s}</span>`}
+
+/* ---- tool grid with category filter ---- */
+let cat = 'all';
+const tabs = [['all','All tools'], ...CATS.map(([n,id])=>[id,n])];
+$('#catTabs').innerHTML = tabs.map(([id,n])=>
+  `<button class="btn ${id==='all'?'btn-g':'btn-o'} btn-sm" data-cat="${id}">${n}</button>`).join('');
+$('#catTabs').onclick = e => {
+  const b = e.target.closest('[data-cat]'); if(!b) return;
+  cat = b.dataset.cat;
+  $$('#catTabs button').forEach(x=>{x.className='btn btn-o btn-sm'});
+  b.className='btn btn-g btn-sm';
+  paintTools();
+};
+function paintTools(){
+  const list = cat==='all'?TOOLS:TOOLS.filter(t=>t.cat===cat);
+  $('#toolGrid').innerHTML = list.map(t=>`
+    <a class="tool-card" href="app.html#${t.id}">
+      ${t.pro?'<span class="t-pro">PRO</span>':''}
+      <div class="t-ic" style="color:${catColor(t.cat)}">${IC[t.icon]}</div>
+      <h4>${t.name}</h4><p>${t.desc}</p>
+    </a>`).join('');
+}
+function catColor(c){return {organize:'#ff9f1c',optimize:'#31d0aa',convert:'#5b8cff',edit:'#ff6b35',secure:'#f43f5e'}[c]||'#fff'}
+paintTools();
+
+/* ---- security ---- */
+$('#secGrid').innerHTML = [
+  [IC.shield,'Nothing is uploaded','Every operation runs in JavaScript on your own machine. There is no upload endpoint to leak, subpoena or breach.'],
+  [IC.cloud,'No retention policy needed','We can\'t delete files we never received. Close the tab and the document is gone from memory entirely.'],
+  [IC.bolt,'Faster than the cloud','Skip the round trip. A 40 MB merge finishes in under two seconds instead of waiting on an upload bar.'],
+  [IC.globe,'Works on a plane','Load the page once and every tool keeps working with the network off. Try it.'],
+  [IC.lock,'Redaction that actually redacts','Our redaction rasterises the page, so black boxes destroy the pixels instead of hiding a text layer anyone can copy out.'],
+  [IC.users,'Compliance-friendly','Because data never leaves the endpoint, PDFForge sits outside most DLP, HIPAA and GDPR processing concerns by design.'],
+].map(([i,h,p])=>`<div class="feat"><div class="t-ic">${i}</div><h3>${h}</h3><p>${p}</p></div>`).join('');
+
+/* ---- steps ---- */
+$('#steps').innerHTML = [
+  ['Drop your file','Drag a PDF anywhere on the page, or pick one from your machine. It loads straight into memory.'],
+  ['Pick your tool','Twenty tools share one workspace, so you can merge, number and watermark without re-uploading.'],
+  ['Download instantly','The finished file saves straight to your downloads folder. No email, no link, no waiting.'],
+].map(([h,p],i)=>`<div class="step"><div class="step-n">${i+1}</div><h4>${h}</h4><p>${p}</p></div>`).join('');
+
+/* ---- stats ---- */
+$('#stats').innerHTML = [
+  ['20','Tools in one workspace'],['0','Bytes uploaded'],['1.8s','Average 40 MB merge'],['100%','Works offline'],
+].map(([b,s])=>`<div class="stat"><b class="grad-txt">${b}</b><span>${s}</span></div>`).join('');
+
+/* ---- quotes ---- */
+$('#quotes').innerHTML = [
+  ['Our firm banned every online PDF tool after a client-confidentiality review. PDFForge passed because there is literally nothing to review — the traffic log is empty.','Priya Raghunathan','Partner, Vertex Legal'],
+  ['I compress scanned intake forms all day. What used to be a three-minute upload-and-wait is now instant, and I can do it on the clinic\'s terrible Wi-Fi.','Daniel Okafor','Practice Manager, Aurora Health'],
+  ['The organize view is the one I actually missed from Acrobat. Drag pages, rotate the sideways scans, delete the blanks, export. That\'s my whole job some days.','Mei Tanaka','Operations Lead, Northwind'],
+].map(([q,n,r])=>`<div class="quote"><div class="stars">★★★★★</div><p>“${q}”</p>
+  <div class="who"><div class="av">${n[0]}</div><div><b>${n}</b><small>${r}</small></div></div></div>`).join('');
+
+/* ---- plan teaser ---- */
+$('#planTeaser').innerHTML = `<div class="plans">
+  ${[['free','Free','0','For the occasional document',['15 operations / month','Files up to 15 MB','All core tools','No watermarks'],false],
+     ['pro','Pro','12','For people who live in PDFs',['Unlimited operations','Files up to 200 MB','All 20 tools incl. Pro','Batch processing','Priority support'],true],
+     ['team','Team','29','For small teams and firms',['Everything in Pro','Files up to 500 MB','5 seats included','Shared presets','API access'],false]]
+  .map(([id,n,p,d,feats,pop])=>`
+    <div class="plan ${pop?'pop':''}">
+      ${pop?'<span class="plan-tag">MOST POPULAR</span>':''}
+      <h3>${n}</h3><p class="p-desc">${d}</p>
+      <div class="p-amt"><b>$${p}</b><span>/month</span></div><div class="p-save"></div>
+      <ul>${feats.map(f=>`<li>${IC.check}${f}</li>`).join('')}</ul>
+      <a href="pricing.html" class="btn ${pop?'btn-p':'btn-g'} btn-block">${id==='free'?'Start free':'Choose '+n}</a>
+    </div>`).join('')}</div>`;
+
+/* ---- faq ---- */
+$('#faq').innerHTML = [
+  ['Are my files really never uploaded?','Yes, really. Every tool is implemented in JavaScript using pdf-lib and pdf.js running in your browser tab. The only network requests this site makes are for its own HTML, CSS and JavaScript. Once those load you can disconnect entirely and keep working.'],
+  ['What happens to a file when I close the tab?','It ceases to exist. Files are held in browser memory (and never written to disk unless you download a result), so closing the tab frees them immediately.'],
+  ['Is there a file size limit?','Free accounts handle files up to 15 MB, Pro up to 200 MB, and Team up to 500 MB. The real ceiling is your device\'s available memory — a modern laptop handles a few hundred megabytes comfortably.'],
+  ['How does compression work if nothing is uploaded?','Each page is re-rendered to a canvas at a resolution and JPEG quality you choose, then rebuilt into a new PDF. It is extremely effective on scans and image-heavy decks. Note that text becomes part of the image, so it is no longer selectable.'],
+  ['Is the redaction tool actually secure?','Yes. Many tools simply draw a black rectangle over text that anyone can select and copy underneath. PDFForge rasterises the page first and burns the box into the pixels, so the original content is destroyed rather than covered.'],
+  ['Can I use this for confidential or regulated documents?','That is exactly what it was built for. Because your data never leaves the endpoint, there is no processor relationship, no data residency question and no third-party subprocessor to disclose. Always confirm with your own compliance team.'],
+  ['Do you support password-protected PDFs?','You can open most encrypted PDFs for reading and editing. Writing certified AES-256 encryption requires native libraries, so the Protect tool flattens and restricts documents client-side; full encryption is offered through the PDFForge API.'],
+  ['What browsers work?','Any current Chrome, Edge, Firefox, Safari or Brave, on desktop or tablet. Larger files run best on desktop where more memory is available.'],
+].map(([q,a])=>`<details class="fq"><summary>${q}</summary><p>${a}</p></details>`).join('');
+
+/* ---- hero drop ---- */
+dropZone($('#heroDrop'), fs => {
+  sessionStorage.setItem('pf.pending','1');
+  window.__pfFiles = fs;
+  location.assign('app.html#merge');
+});
+</script>
+</body>
+</html>

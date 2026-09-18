@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workspace — PDFForge</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23ff6b35'/><path d='M30 22h25l15 15v41H30z' fill='none' stroke='white' stroke-width='7' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+<div id="nav"></div>
+
+<div class="app">
+  <aside class="side">
+    <div class="usage-box" id="usageBox"></div>
+    <div class="side-grp">
+      <h6>Workspace</h6>
+      <button class="side-item" data-nav="home"></button>
+    </div>
+    <div id="sideCats"></div>
+    <div class="side-grp">
+      <h6>Account</h6>
+      <button class="side-item" data-nav="history"></button>
+      <a class="side-item" href="account.html"></a>
+      <a class="side-item" href="pricing.html"></a>
+    </div>
+  </aside>
+  <main class="main"><div id="toolHost"></div></main>
+</div>
+
+<script src="vendor/pdf-lib.min.js"></script>
+<script src="vendor/pdf.min.js"></script>
+<script src="vendor/jszip.min.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/core.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/workspace.js"></script>
+<script>
+requireAuth();
+$('#nav').innerHTML = navBar('Tools');
+
+/* ---------- sidebar ---------- */
+function buildSide(){
+  $('.side-grp [data-nav="home"]').innerHTML = IC.grid + ' All tools';
+  $('#sideCats').innerHTML = CATS.map(([name,id])=>`
+    <div class="side-grp"><h6>${name}</h6>
+      ${TOOLS.filter(t=>t.cat===id).map(t=>`
+        <button class="side-item" data-tool="${t.id}">${IC[t.icon]}<span class="grow">${t.name}</span>
+        ${t.pro && !plan().pro ? '<span class="chip" style="font-size:9px;padding:2px 6px">PRO</span>':''}</button>`).join('')}
+    </div>`).join('');
+  const acct = $$('.side-grp')[$$('.side-grp').length-1];
+  const items = $$('.side-item', acct);
+  items[0].innerHTML = IC.clock + ' History';
+  items[1].innerHTML = IC.settings + ' Account';
+  items[2].innerHTML = IC.card + ' Billing';
+  $$('[data-tool]').forEach(b=> b.onclick = ()=> go(b.dataset.tool));
+  $('[data-nav="home"]').onclick = ()=> go('');
+  $('[data-nav="history"]').onclick = ()=> go('history');
+}
+
+function renderUsage(){
+  const q = plan().quota, used = Store.d.usage.ops;
+  const pct = q===Infinity ? 100 : Math.min(100, used/q*100);
+  $('#usageBox').innerHTML = `
+    <div class="row spread" style="font-size:12px"><b>${plan().name} plan</b>
+      <span class="dim">${q===Infinity?'∞':used+'/'+q}</span></div>
+    <div class="bar"><i style="width:${q===Infinity?100:pct}%"></i></div>
+    <div class="dim" style="font-size:11.5px">${q===Infinity?'Unlimited operations':`${Math.max(0,q-used)} operations left this month`}</div>
+    ${plan().pro?'':`<a href="pricing.html" class="btn btn-p btn-sm btn-block" style="margin-top:10px">${IC.zap} Upgrade</a>`}`;
+}
+document.addEventListener('pf:usage', renderUsage);
+
+/* ---------- router ---------- */
+function go(id){
+  if(id) location.hash = id; else history.replaceState(null,'','app.html');
+  route();
+}
+function route(){
+  const id = location.hash.slice(1);
+  $$('.side-item').forEach(b=>b.classList.toggle('on', b.dataset.tool===id || (!id && b.dataset.nav==='home') || (id==='history'&&b.dataset.nav==='history')));
+  if(id==='history') return renderHistory();
+  const t = toolById(id);
+  if(!t){ WS.tool=null; WS.reset(); return renderHome(); }
+  WS.tool = t; WS.reset(); WS.curPage=0; WS.selObj=null;
+  renderTool();
+  if(window.__pfFiles){ const f=window.__pfFiles; window.__pfFiles=null; WS.addFiles(f); }
+}
+window.onhashchange = route;
+
+/* ---------- home ---------- */
+function renderHome(){
+  const u = Store.d.user;
+  const recent = Store.d.jobs.slice(0,5);
+  $('#toolHost').innerHTML = `
+    <div class="page-head">
+      <div>
+        <h1 class="h-md">${greet()}, ${esc(u.name.split(' ')[0])}</h1>
+        <p class="muted" style="font-size:14.5px;margin-top:6px">Pick a tool, or drop a PDF anywhere on this page.</p>
+      </div>
+      <span class="chip chip-ok"><span class="dot"></span>Processing locally</span>
+    </div>
+
+    <div class="dz" id="quickDz" style="margin-bottom:26px">
+      <div class="drop-ic">${IC.upload}</div>
+      <h4>Drop a PDF to open it</h4><p>We'll take you straight to the organizer</p>
+    </div>
+
+    <div class="kpis" style="margin-bottom:28px">
+      ${[[IC.zap,'Operations this month',Store.d.usage.ops],
+         [IC.file,'Files processed',Store.d.jobs.length],
+         [IC.cloud,'Bytes uploaded','0'],
+         [IC.star,'Plan',plan().name]]
+        .map(([i,l,v])=>`<div class="kpi"><small>${iconSpan(i,14)}${l}</small><b>${v}</b></div>`).join('')}
+    </div>
+
+    ${CATS.map(([name,id])=>`
+      <div style="margin-bottom:28px">
+        <h3 class="h-sm" style="margin-bottom:13px">${name}</h3>
+        <div class="tool-grid">
+          ${TOOLS.filter(t=>t.cat===id).map(t=>`
+            <button class="tool-card" data-open="${t.id}">
+              ${t.pro?'<span class="t-pro">PRO</span>':''}
+              <div class="t-ic" style="color:${catColor(t.cat)}">${IC[t.icon]}</div>
+              <h4>${t.name}</h4><p>${t.desc}</p></button>`).join('')}
+        </div></div>`).join('')}
+
+    ${recent.length?`
+      <div style="margin-top:34px">
+        <div class="row spread" style="margin-bottom:13px">
+          <h3 class="h-sm">Recent activity</h3>
+          <button class="btn btn-ghost btn-sm" onclick="go('history')">View all ${IC.right}</button>
+        </div>
+        <div class="card" style="padding:6px"><table><tbody>
+          ${recent.map(j=>`<tr><td style="width:40px">${iconSpan(IC.checkC,16)}</td>
+            <td><b style="color:var(--txt)">${esc(j.tool)}</b><br><small class="dim">${esc(j.detail||'')}</small></td>
+            <td class="mono" style="font-size:12px">${esc(j.outName||'')}</td>
+            <td style="text-align:right">${fmtTime(j.ts)}</td></tr>`).join('')}
+        </tbody></table></div>
+      </div>`:''}
+  `;
+  $$('[data-open]').forEach(b=>b.onclick=()=>go(b.dataset.open));
+  dropZone($('#quickDz'), fs=>{ window.__pfFiles=fs; go('organize'); });
+  document.ondragover = e=>e.preventDefault();
+  document.ondrop = e=>{ e.preventDefault(); const f=[...e.dataTransfer.files]; if(f.length){ window.__pfFiles=f; go('organize'); } };
+}
+const greet=()=>{const h=new Date().getHours();return h<12?'Good morning':h<18?'Good afternoon':'Good evening'};
+function catColor(c){return {organize:'#ff9f1c',optimize:'#31d0aa',convert:'#5b8cff',edit:'#ff6b35',secure:'#f43f5e'}[c]||'#fff'}
+
+/* ---------- history ---------- */
+function renderHistory(){
+  const j = Store.d.jobs;
+  $('#toolHost').innerHTML = `
+    <div class="page-head">
+      <div><h1 class="h-md">History</h1>
+        <p class="muted" style="font-size:14.5px;margin-top:6px">A local log of operations. Stored in your browser only — never on a server.</p></div>
+      ${j.length?`<button class="btn btn-danger btn-sm" id="clearH">${IC.trash} Clear history</button>`:''}
+    </div>
+    ${j.length?`<div class="card" style="padding:6px"><table>
+      <thead><tr><th></th><th>Tool</th><th>Output</th><th>Size</th><th style="text-align:right">When</th></tr></thead>
+      <tbody>${j.map(x=>`<tr>
+        <td style="width:36px">${iconSpan(IC.checkC,16)}</td>
+        <td><b style="color:var(--txt)">${esc(x.tool)}</b><br><small class="dim">${esc(x.detail||'')}</small></td>
+        <td class="mono" style="font-size:12px">${esc(x.outName||'—')}</td>
+        <td>${fmtBytes(x.size)}</td>
+        <td style="text-align:right">${fmtTime(x.ts)}</td></tr>`).join('')}</tbody></table></div>`
+    :`<div class="card empty">${IC.clock}<p>No operations yet. Run a tool and it'll show up here.</p>
+      <button class="btn btn-p mt16" onclick="go('')">Browse tools</button></div>`}`;
+  $('#clearH')?.addEventListener('click',()=>{ Store.d.jobs=[]; Store.save(); renderHistory(); toast('History cleared','ok'); });
+}
+
+buildSide(); renderUsage(); route();
+</script>
+</body>
+</html>

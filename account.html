@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Account — PDFForge</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23ff6b35'/><path d='M30 22h25l15 15v41H30z' fill='none' stroke='white' stroke-width='7' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+<div id="nav"></div>
+<div class="app">
+  <aside class="side">
+    <div class="side-grp"><h6>Settings</h6><div id="sideNav"></div></div>
+    <div class="side-grp"><h6>Workspace</h6>
+      <a class="side-item" href="app.html" id="backLink"></a></div>
+  </aside>
+  <main class="main"><div id="host"></div></main>
+</div>
+
+<script src="js/icons.js"></script>
+<script src="js/core.js"></script>
+<script>
+requireAuth();
+$('#nav').innerHTML = navBar('');
+$('#backLink').innerHTML = IC.grid + ' All tools';
+
+const NAV = [['profile','Profile',IC.users],['billing','Billing',IC.card],['usage','Usage',IC.chart],['api','API keys',IC.key],['prefs','Preferences',IC.settings],['danger','Data & privacy',IC.shield]];
+let tab = location.hash.slice(1) || 'profile';
+$('#sideNav').innerHTML = NAV.map(([id,n,i])=>`<button class="side-item" data-t="${id}">${i}<span>${n}</span></button>`).join('');
+$$('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;location.hash=tab;paint();});
+
+function head(t,s){return `<div class="page-head"><div><h1 class="h-md">${t}</h1><p class="muted" style="font-size:14.5px;margin-top:6px">${s}</p></div></div>`}
+
+function paint(){
+  $$('[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  const u = Store.d.user, P = plan();
+  const H = $('#host');
+
+  if(tab==='profile'){
+    H.innerHTML = head('Profile','Your account details. Everything here lives in this browser only.') + `
+      <div class="card" style="max-width:600px">
+        <div class="row gap16" style="margin-bottom:24px">
+          <div class="av" style="width:58px;height:58px;font-size:22px">${esc(u.name[0].toUpperCase())}</div>
+          <div><b style="font-size:17px">${esc(u.name)}</b><br><span class="dim" style="font-size:13.5px">${esc(u.email)}</span>
+          <div class="row gap8 mt8"><span class="chip ${P.pro?'chip-brand':''}">${P.name} plan</span>
+          <span class="chip">Member since ${fmtDate(u.since)}</span></div></div>
+        </div>
+        <div class="field"><label>Full name</label><input class="inp" id="p_name" value="${esc(u.name)}"></div>
+        <div class="field"><label>Email</label><input class="inp" id="p_email" value="${esc(u.email)}"></div>
+        <div class="field"><label>Company (optional)</label><input class="inp" id="p_co" value="${esc(u.co||'')}"></div>
+        <button class="btn btn-p" id="save">${IC.check} Save changes</button>
+      </div>`;
+    $('#save').onclick=()=>{
+      u.name=$('#p_name').value||u.name; u.email=$('#p_email').value||u.email; u.co=$('#p_co').value;
+      Store.save(); $('#nav').innerHTML=navBar(''); paint(); toast('Profile updated','ok');
+    };
+  }
+
+  if(tab==='billing'){
+    const P2 = PLANS[Store.d.plan];
+    const amt = Store.d.billing==='yearly'?P2.yearly:P2.monthly;
+    H.innerHTML = head('Billing','Manage your subscription and invoices.') + `
+      <div class="card" style="max-width:720px;margin-bottom:18px">
+        <div class="row spread" style="flex-wrap:wrap;gap:16px">
+          <div><span class="dim" style="font-size:12.5px">CURRENT PLAN</span>
+            <h3 class="h-sm" style="margin:6px 0 4px">PDFForge ${P2.name}</h3>
+            <p class="dim" style="font-size:13.5px">${amt?`$${amt} / ${Store.d.billing==='yearly'?'year':'month'} · renews ${fmtDate(Date.now()+2592e6)}`:'Free forever · no card on file'}</p></div>
+          <div class="row gap8">
+            <a href="pricing.html" class="btn ${P2.pro?'btn-g':'btn-p'}">${P2.pro?'Change plan':'Upgrade'}</a>
+            ${P2.pro?`<button class="btn btn-o" id="cancel">Cancel</button>`:''}
+          </div>
+        </div>
+      </div>
+      ${P2.pro?`<div class="card" style="max-width:720px;margin-bottom:18px">
+        <h3 class="h-sm" style="margin-bottom:14px">Payment method</h3>
+        <div class="file-row"><div class="file-ic" style="background:rgba(91,140,255,.14);color:#8fb0ff">VISA</div>
+          <div class="grow"><b>•••• •••• •••• 4242</b><small>Expires 12/28</small></div>
+          <button class="btn btn-g btn-sm">Update</button></div></div>`:''}
+      <div class="card" style="max-width:720px">
+        <h3 class="h-sm" style="margin-bottom:14px">Invoices</h3>
+        ${P2.pro?`<table><thead><tr><th>Date</th><th>Description</th><th>Amount</th><th style="text-align:right"></th></tr></thead><tbody>
+          ${[0,1,2].map(i=>`<tr><td>${fmtDate(Date.now()-i*2592e6)}</td><td>PDFForge ${P2.name} — ${Store.d.billing}</td>
+            <td class="mono">$${amt}.00</td><td style="text-align:right"><button class="btn btn-ghost btn-sm">${IC.download} PDF</button></td></tr>`).join('')}
+        </tbody></table>`:`<p class="dim" style="font-size:13.5px">No invoices — you're on the free plan.</p>`}
+      </div>`;
+    $('#cancel')?.addEventListener('click',()=>{
+      modal(`<h3 class="h-sm">Cancel subscription?</h3><p class="muted" style="font-size:14px;margin:10px 0 20px">You'll keep Pro features until the end of the billing period, then drop to Free (15 operations/month).</p>
+      <div class="row gap8"><button class="btn btn-g grow" onclick="document.querySelector('.ovl').remove();document.body.classList.remove('noscroll')">Keep Pro</button>
+      <button class="btn btn-danger grow" id="yes">Cancel plan</button></div>`);
+      $('#yes').onclick=()=>{Store.d.plan='free';Store.save();document.querySelector('.ovl').remove();document.body.classList.remove('noscroll');paint();$('#nav').innerHTML=navBar('');toast('Subscription cancelled','ok');};
+    });
+  }
+
+  if(tab==='usage'){
+    const jobs = Store.d.jobs;
+    const byTool = {};
+    jobs.forEach(j=>byTool[j.tool]=(byTool[j.tool]||0)+1);
+    const top = Object.entries(byTool).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const max = top[0]?.[1]||1;
+    H.innerHTML = head('Usage','Operation counts for the current billing period.') + `
+      <div class="kpis" style="margin-bottom:24px">
+        ${[['Operations this month',Store.d.usage.ops],['Total lifetime runs',jobs.length],
+           ['Data uploaded','0 B'],['Quota remaining',P.quota===Infinity?'∞':Math.max(0,P.quota-Store.d.usage.ops)]]
+          .map(([l,v])=>`<div class="kpi"><small>${l}</small><b>${v}</b></div>`).join('')}
+      </div>
+      <div class="card" style="max-width:720px">
+        <h3 class="h-sm" style="margin-bottom:18px">Most used tools</h3>
+        ${top.length?top.map(([t,n])=>`
+          <div style="margin-bottom:14px">
+            <div class="row spread" style="font-size:13.5px;margin-bottom:5px"><span>${esc(t)}</span><b class="dim">${n}</b></div>
+            <div class="bar"><i style="width:${n/max*100}%"></i></div></div>`).join('')
+        :`<p class="dim" style="font-size:13.5px">No activity yet.</p>`}
+      </div>`;
+  }
+
+  if(tab==='api'){
+    H.innerHTML = head('API keys','Server-side processing for automated pipelines. Team plan and above.') + `
+      ${P.pro?'':`<div class="err" style="max-width:720px;margin-bottom:18px;border-color:rgba(255,176,32,.3);background:rgba(255,176,32,.07);color:var(--warn)">
+        API access requires the Team plan. <a href="pricing.html" style="color:var(--brand);font-weight:600">Upgrade →</a></div>`}
+      <div class="card" style="max-width:720px;margin-bottom:18px">
+        <div class="row spread" style="margin-bottom:16px"><h3 class="h-sm">Your keys</h3>
+        <button class="btn btn-g btn-sm" id="newKey">${IC.plus} New key</button></div>
+        ${Store.d.keys.map(k=>`<div class="file-row" style="margin-bottom:8px">
+          <div class="file-ic" style="background:rgba(49,208,170,.14);color:var(--ok)">${IC.key}</div>
+          <div class="grow" style="min-width:0"><b>${esc(k.label)}</b>
+            <small class="mono">${esc(k.token.slice(0,14))}••••••••</small></div>
+          <span class="dim" style="font-size:12px">${k.calls.toLocaleString()} calls</span>
+          <button class="ico-btn" data-cp="${esc(k.token)}">${IC.copy}</button>
+          <button class="ico-btn dngr" data-dk="${k.id}">${IC.trash}</button></div>`).join('')}
+      </div>
+      <div class="card" style="max-width:720px">
+        <h3 class="h-sm" style="margin-bottom:12px">Quick start</h3>
+        <pre class="mono" style="background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:16px;font-size:12px;overflow-x:auto;line-height:1.75;color:var(--txt-2)">curl -X POST https://api.pdfforge.io/v1/merge \\
+  -H "Authorization: Bearer ${esc(Store.d.keys[0]?.token.slice(0,20)||'pk_live_...')}..." \\
+  -F "files[]=@contract.pdf" \\
+  -F "files[]=@appendix.pdf" \\
+  -o merged.pdf</pre>
+        <p class="dim" style="font-size:12.5px;margin-top:12px">The API is the one place files are processed server-side — for CI pipelines and backends where a browser isn't available. Files are deleted within 60 seconds of the response.</p>
+      </div>`;
+    $('#newKey').onclick=()=>{
+      Store.d.keys.push({id:uid(),label:'Key '+(Store.d.keys.length+1),token:'pk_live_'+uid()+uid(),created:Date.now(),calls:0});
+      Store.save(); paint(); toast('API key created','ok');
+    };
+    $$('[data-cp]').forEach(b=>b.onclick=()=>{navigator.clipboard.writeText(b.dataset.cp);toast('Key copied','ok')});
+    $$('[data-dk]').forEach(b=>b.onclick=()=>{Store.d.keys=Store.d.keys.filter(k=>k.id!==b.dataset.dk);Store.save();paint();toast('Key revoked','ok')});
+  }
+
+  if(tab==='prefs'){
+    const s = Store.d.settings;
+    H.innerHTML = head('Preferences','Tune how the workspace behaves.') + `
+      <div class="card" style="max-width:600px">
+        ${[['autoDownload','Download results automatically','Save the output file the moment an operation finishes.'],
+           ['keepHistory','Keep a local history log','Store a record of operations in this browser. Never sent anywhere.']]
+          .map(([k,t,d])=>`<div style="padding:14px 0;border-bottom:1px solid var(--line)">
+            <label class="chk" style="align-items:flex-start"><input type="checkbox" data-s="${k}" ${s[k]?'checked':''} style="margin-top:3px">
+            <span><b style="color:var(--txt);font-size:14px">${t}</b><br><span class="dim" style="font-size:12.5px">${d}</span></span></label></div>`).join('')}
+        <p class="dim mt16" style="font-size:12.5px">Changes save instantly.</p>
+      </div>`;
+    $$('[data-s]').forEach(c=>c.onchange=()=>{Store.d.settings[c.dataset.s]=c.checked;Store.save();toast('Preference saved','ok')});
+  }
+
+  if(tab==='danger'){
+    H.innerHTML = head('Data & privacy','What we store, and how to wipe it.') + `
+      <div class="card" style="max-width:720px;margin-bottom:18px">
+        <h3 class="h-sm" style="margin-bottom:14px">What PDFForge stores about you</h3>
+        <table><tbody>
+          ${[['Your PDFs','Nothing. Files exist in tab memory only and are discarded on close.'],
+             ['Account details','Name and email — in this browser\'s localStorage, not on a server.'],
+             ['Operation history','Tool names and timestamps, locally. No file contents.'],
+             ['Analytics','None. No trackers, no pixels, no third-party scripts.']]
+            .map(([a,b])=>`<tr><td style="color:var(--txt);font-weight:600;width:32%">${a}</td><td>${b}</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+      <div class="card" style="max-width:720px;border-color:rgba(255,95,86,.3)">
+        <h3 class="h-sm" style="margin-bottom:8px">Reset everything</h3>
+        <p class="muted" style="font-size:14px;margin-bottom:16px">Erases your account, plan, history, keys and preferences from this browser. Cannot be undone.</p>
+        <button class="btn btn-danger" id="wipe">${IC.trash} Erase all local data</button>
+      </div>`;
+    $('#wipe').onclick=()=>{
+      modal(`<h3 class="h-sm">Erase all data?</h3><p class="muted" style="font-size:14px;margin:10px 0 20px">This removes everything PDFForge has stored in this browser.</p>
+      <div class="row gap8"><button class="btn btn-g grow" onclick="document.querySelector('.ovl').remove();document.body.classList.remove('noscroll')">Cancel</button>
+      <button class="btn btn-danger grow" id="yes2">Erase everything</button></div>`);
+      $('#yes2').onclick=()=>{Store.reset();location.assign('index.html')};
+    };
+  }
+}
+window.onhashchange=()=>{tab=location.hash.slice(1)||'profile';paint()};
+paint();
+</script>
+</body>
+</html>

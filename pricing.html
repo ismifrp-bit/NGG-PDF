@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pricing — PDFForge</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23ff6b35'/><path d='M30 22h25l15 15v41H30z' fill='none' stroke='white' stroke-width='7' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+<div id="nav"></div>
+
+<section class="sec" style="padding-top:60px">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="chip chip-brand"><span class="dot"></span>Simple, honest pricing</span>
+      <h1 class="h-lg">Pay for volume, not for privacy</h1>
+      <p class="lead">Every plan — including free — processes files entirely on your device. You're paying for limits and pro tools, never for security.</p>
+    </div>
+    <div class="price-toggle" id="cycle">
+      <button data-v="monthly" class="on">Monthly</button>
+      <button data-v="yearly">Yearly <span style="color:var(--ok);font-size:11.5px">−20%</span></button>
+    </div>
+    <div id="plans"></div>
+
+    <div class="card mt32" style="margin-top:46px">
+      <h3 class="h-sm" style="margin-bottom:18px">Full feature comparison</h3>
+      <div style="overflow-x:auto"><table id="cmp"></table></div>
+    </div>
+
+    <div class="sec-head" style="margin-top:70px;margin-bottom:28px"><h2 class="h-md">Billing questions</h2></div>
+    <div class="faq" id="faq"></div>
+  </div>
+</section>
+
+<div id="foot"></div>
+
+<script src="js/icons.js"></script>
+<script src="js/core.js"></script>
+<script>
+$('#nav').innerHTML = navBar('Pricing');
+$('#foot').innerHTML = footer();
+
+let cycle = Store.d.billing || 'monthly';
+const DATA = [
+  { id:'free', name:'Free', desc:'For the occasional document.',
+    feats:[['15 operations / month',1],['Files up to 15 MB',1],['All 14 core tools',1],['No watermarks on output',1],['Pro tools (redact, crop, OCR)',0],['Batch processing',0],['API access',0]] },
+  { id:'pro', name:'Pro', pop:true, desc:'For people who live in PDFs.',
+    feats:[['Unlimited operations',1],['Files up to 200 MB',1],['All 20 tools',1],['Pro tools unlocked',1],['Batch processing',1],['Saved presets',1],['Priority support',1]] },
+  { id:'team', name:'Team', desc:'For small teams and firms.',
+    feats:[['Everything in Pro',1],['Files up to 500 MB',1],['5 seats included',1],['Shared team presets',1],['API access — 10k calls/mo',1],['Raster OCR engine',1],['SSO via Google Workspace',1]] },
+  { id:'ent', name:'Enterprise', desc:'For regulated organisations.', custom:true,
+    feats:[['Everything in Team',1],['Unlimited seats & file size',1],['Self-hosted deployment',1],['SAML SSO & SCIM',1],['Audit logging',1],['SOC 2 report & DPA',1],['Dedicated engineer',1]] },
+];
+
+function paint(){
+  $('#plans').innerHTML = `<div class="plans">${DATA.map(p=>{
+    const P = PLANS[p.id];
+    const amt = cycle==='yearly' ? Math.round(P.yearly/12) : P.monthly;
+    const cur = Store.d.plan === p.id;
+    return `<div class="plan ${p.pop?'pop':''}">
+      ${p.pop?'<span class="plan-tag">MOST POPULAR</span>':''}
+      <h3>${p.name}</h3><p class="p-desc">${p.desc}</p>
+      ${p.custom
+        ? `<div class="p-amt"><b style="font-size:30px">Custom</b></div><div class="p-save"></div>`
+        : `<div class="p-amt"><b>$${amt}</b><span>/month</span></div>
+           <div class="p-save">${cycle==='yearly'&&P.yearly?`$${P.yearly} billed yearly · save $${P.monthly*12-P.yearly}`:''}</div>`}
+      <ul>${p.feats.map(([t,on])=>`<li class="${on?'':'off'}">${on?IC.check:IC.x}${t}</li>`).join('')}</ul>
+      <button class="btn ${cur?'btn-g':p.pop?'btn-p':'btn-g'} btn-block" data-buy="${p.id}" ${cur?'disabled':''}>
+        ${cur?'Current plan':p.custom?'Contact sales':p.id==='free'?'Downgrade':'Choose '+p.name}</button>
+    </div>`;}).join('')}</div>`;
+  $$('[data-buy]').forEach(b=>b.onclick=()=>buy(b.dataset.buy));
+}
+
+$('#cycle').onclick = e => {
+  const b = e.target.closest('[data-v]'); if(!b) return;
+  cycle = b.dataset.v; Store.d.billing = cycle; Store.save();
+  $$('#cycle button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  paint();
+};
+
+function buy(id){
+  if(id==='ent'){
+    modal(`<h3 class="h-sm">Talk to sales</h3><p class="muted" style="font-size:14px;margin:8px 0 18px">Tell us about your deployment and we'll get back within one business day.</p>
+      <form id="ef"><div class="field"><label>Work email</label><input class="inp" type="email" required placeholder="you@company.com"></div>
+      <div class="field"><label>Company</label><input class="inp" required placeholder="Acme Corp"></div>
+      <div class="field"><label>Seats needed</label><input class="inp" type="number" value="50"></div>
+      <button class="btn btn-p btn-block">Request a call</button></form>`);
+    $('#ef').onsubmit = e=>{e.preventDefault(); $('.ovl').remove(); document.body.classList.remove('noscroll'); toast('Thanks — sales will reach out shortly','ok');};
+    return;
+  }
+  if(id==='free'){ Store.d.plan='free'; Store.save(); paint(); toast('Switched to the Free plan','ok'); return; }
+  const P = PLANS[id];
+  const amt = cycle==='yearly'? P.yearly : P.monthly;
+  const m = modal(`
+    <h3 class="h-sm">Upgrade to ${P.name}</h3>
+    <p class="muted" style="font-size:13.5px;margin:7px 0 18px">${cycle==='yearly'?'Billed annually':'Billed monthly'}</p>
+    <div class="card-2" style="margin-bottom:18px">
+      <div class="row spread" style="font-size:14px"><span>PDFForge ${P.name}</span><b>$${amt}</b></div>
+      <div class="row spread dim" style="font-size:12.5px;margin-top:6px"><span>${cycle==='yearly'?'12 months':'1 month'}</span><span>${cycle==='yearly'?`$${Math.round(P.yearly/12)}/mo effective`:''}</span></div>
+    </div>
+    <form id="pf">
+      <div class="field"><label>Card number</label><input class="inp mono" id="cc" placeholder="4242 4242 4242 4242" required></div>
+      <div class="row gap12">
+        <div class="field grow"><label>Expiry</label><input class="inp mono" placeholder="12 / 28" required></div>
+        <div class="field grow"><label>CVC</label><input class="inp mono" placeholder="123" required></div>
+      </div>
+      <div class="field"><label>Name on card</label><input class="inp" value="${esc(Store.d.user?.name||'')}" required></div>
+      <button class="btn btn-p btn-block btn-lg">Pay $${amt} and upgrade</button>
+      <p class="tc dim" style="font-size:11.5px;margin-top:12px">Demo checkout — no payment is processed and no card data is stored.</p>
+    </form>`);
+  $('#cc',m.el).oninput = e => {
+    e.target.value = e.target.value.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();
+  };
+  $('#pf',m.el).onsubmit = e=>{
+    e.preventDefault();
+    m.close(); busy(true,'Processing payment…','Securing your subscription');
+    setTimeout(()=>{ busy(false); Store.d.plan=id; Store.save(); paint();
+      $('#nav').innerHTML = navBar('Pricing');
+      toast(`Welcome to PDFForge ${P.name}!`,'ok');
+      modal(`<div style="text-align:center"><div class="t-ic" style="margin:0 auto 14px;width:52px;height:52px;background:rgba(49,208,170,.14);border-color:rgba(49,208,170,.3);color:var(--ok)">${IC.checkC}</div>
+        <h3 class="h-md">You're on ${P.name}</h3><p class="muted" style="font-size:14.5px;margin:10px 0 20px">Every tool is unlocked and your limits are lifted.</p>
+        <a href="app.html" class="btn btn-p btn-block btn-lg">Open the workspace</a></div>`);
+    },1500);
+  };
+}
+
+/* comparison table */
+const ROWS = [
+  ['Operations per month','15','Unlimited','Unlimited','Unlimited'],
+  ['Max file size','15 MB','200 MB','500 MB','Unlimited'],
+  ['Merge, split, organize','✓','✓','✓','✓'],
+  ['Compress & convert','✓','✓','✓','✓'],
+  ['Sign & watermark','✓','✓','✓','✓'],
+  ['Redaction (true burn)','—','✓','✓','✓'],
+  ['Crop & N-up layouts','—','✓','✓','✓'],
+  ['Batch processing','—','✓','✓','✓'],
+  ['Saved presets','—','Personal','Shared','Shared'],
+  ['API access','—','—','10k calls','Unlimited'],
+  ['Seats','1','1','5','Unlimited'],
+  ['Self-hosted option','—','—','—','✓'],
+  ['Support','Community','Priority','Priority','Dedicated'],
+];
+$('#cmp').innerHTML = `<thead><tr><th>Feature</th><th>Free</th><th>Pro</th><th>Team</th><th>Enterprise</th></tr></thead>
+  <tbody>${ROWS.map(r=>`<tr><td style="color:var(--txt);font-weight:550">${r[0]}</td>${r.slice(1).map(c=>
+    `<td style="${c==='✓'?'color:var(--ok);font-weight:700':c==='—'?'color:var(--txt-3)':''}">${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+
+$('#faq').innerHTML = [
+  ['Can I switch plans any time?','Yes. Upgrades apply instantly and downgrades take effect at the end of your billing period. No lock-in, no cancellation fee.'],
+  ['What counts as an operation?','One run of one tool. Merging twelve files into one PDF is a single operation, as is compressing a 400-page document.'],
+  ['Why charge at all if there are no server costs?','Fair question. There are no processing servers, but there is ongoing engineering — twenty tools, edge cases across thousands of malformed PDFs, and browser compatibility. Pro subscriptions fund that work and keep the free tier genuinely free.'],
+  ['Do you offer refunds?','Full refund within 30 days, no questions asked. Email support and we process it same-day.'],
+  ['Is there a discount for nonprofits or students?','Yes — 50% off Pro and Team for registered nonprofits, students and educators. Just email us from your institutional address.'],
+].map(([q,a])=>`<details class="fq"><summary>${q}</summary><p>${a}</p></details>`).join('');
+
+if(cycle==='yearly'){ $$('#cycle button').forEach(x=>x.classList.toggle('on', x.dataset.v==='yearly')); }
+paint();
+</script>
+</body>
+</html>
